@@ -6,14 +6,13 @@ This repository contains documentation on how to use dedi.global - a universal D
 
 Visit the documentation to learn how to:
 
-- Create and manage namespaces for your organization
-- Define schemas and publish registries
-- Add and verify records
-- Query and lookup public information
-- Integrate DeDi APIs into your applications
+* Create and manage namespaces for your organization
+* Define schemas and publish registries
+* Add and verify records
+* Query and lookup public information
+* Integrate DeDi APIs into your applications
+* Technical guides on using DeDi.global for key use cases
 
----
+***
 
 For more information, visit [dedi.global](https://dedi.global)
-
-
