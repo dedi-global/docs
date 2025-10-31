@@ -2,9 +2,34 @@
 
 This repository contains documentation on how to use dedi.global - a universal DPI (digital public infrastructure) for publishing and verifying public registries using the Decentralized Directory (DeDi) protocol.
 
-## Documentation
+## Repository Structure
 
-Visit the documentation to learn how to:
+This documentation is organized into four main sections:
+
+### Documentation
+Comprehensive guides and tutorials for using DeDi.Global
+- User guides for creating and managing namespaces, registries, and records
+- Step-by-step tutorials
+- Best practices
+
+### Home
+Getting started information and introduction to DeDi.Global
+
+### Developers
+Technical documentation for developers integrating with DeDi.Global
+- API references
+- Integration guides
+- Code examples
+
+### Resources
+Additional resources and references
+- Glossary
+- FAQ
+- Troubleshooting guides
+
+## Getting Started
+
+Visit the [Documentation](Documentation/user-guides/) section to learn how to:
 
 * Create and manage namespaces for your organization
 * Define schemas and publish registries
