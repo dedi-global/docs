@@ -2,7 +2,7 @@
 
 ## About
 
-* [Intro](README.md)
+* [Understanding DeDi](README.md)
 * [Use DeDi in your workflows](about/use-dedi-in-your-workflows.md)
 
 ## Resources
@@ -13,6 +13,6 @@
   * [User Guide - DeDi.Global namespace & directory creation](resources/user-guides/namespace-and-registry-creation.md)
 * [What real world use case can DeDi.global solve?](resources/what-real-world-use-case-can-dedi.global-solve.md)
 
-## Developer documentation
+## DeDi.global - Developers&#x20;
 
-* [Developer documentation](developer-documentation/developer-documentation.md)
+* [Developer documentation](dedi.global-developers/developer-documentation.md)
