@@ -8,4 +8,4 @@
 
 ## Developer documentation
 
-* [Page 1](developer-documentation/page-1.md)
+* [Developer documentation](developer-documentation/developer-documentation.md)
