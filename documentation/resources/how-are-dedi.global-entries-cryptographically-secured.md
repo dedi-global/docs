@@ -1,168 +1,113 @@
 # How are DeDi.global entries cryptographically secured?
 
-DeDi.global entries are cryptographically secured through proof anchoring on the CORD blockchain—a Distributed Ledger Technology (DLT) that serves as a permanent, tamper-evident reserve of proofs.
-
-### Overview
-
-Every directory entry in DeDi.global is backed by a cryptographic proof anchored on-chain. This ensures that:
-
-* **Authenticity** is provable—every entry can be traced to a verified publisher
-* **Integrity** is guaranteed—any tampering is detectable
-* **Provenance** is auditable—the complete history of changes is preserved
+DeDi.global entries are cryptographically secured through proof anchoring on the CORD blockchain. Proofs are anchored at **every level** of the hierarchy—namespaces, registries, and records each have their own cryptographic proof.
 
 ***
 
-### Identity Foundation
+### How Proofs Work
 
-When a user registers on DeDi.global, a cryptographic identity is established on the CORD chain.
+Every entry in DeDi is secured through a consistent process:
 
-#### Profile Creation
+1. The entry data is converted into an object
+2. Canonically serialized
+3. Stringified using `JSON.stringify()`
+4. Hashed using **BLAKE2 H256**
 
-1. A **keypair** is generated using the **sr25519 algorithm** (a Schnorr signature scheme optimized for blockchain use)
-2. Using this keypair, a **profile** is created on-chain with a unique `profile_id`
-3. This `profile_id` appears as the `created_by` value across namespaces, registries, and records
+The resulting digest, along with metadata about the creator and network, forms the proof that is anchored on-chain.
 
-#### Key Management
+***
 
-* Each `profile_id` is associated with an sr25519 keypair
-* **Key rotation** is supported at the protocol level
-* After rotation, the `profile_id` always resolves to the latest public key
-* All signing and transaction fees are handled using the currently associated keypair
+### Proof Structures
+
+#### Namespace Proof
+
+```json
+{
+  "type": "DediNamespaceProof2025",
+  "namespace_did": "did:dedi:namespace:acme-org",
+  "creator_did": "did:web:acme.org#admin",
+  "digest": "0x8f3c91a2b7d4e918c0d55eab3c1a9e4e21e9f8c3d7c6b1a2f4c9d88e1a7b3f22",
+  "network_genesis": "0x93abf42c1d77e8f0a928f31fd29d77bd73cd91eb99f15e41f6d39e087ac3b22c"
+}
+```
+
+**Fields used for digest calculation:** `namespace_id`, `description`, `genesis`, `created_by`, `version`, `version_count`
+
+#### Registry Proof
+
+```json
+{
+  "type": "DeDiRegistryProof2025",
+  "namespace_did": "did:dedi:ns:acme.global",
+  "registry_identifier": "registry:acme.membership",
+  "creator_did": "did:web:acme.org#admin",
+  "digest": "0x91ef3ab2c77dd9f01892bf31cd29b8ae7f5dd321ee019ec45bd119ab4cf72d11",
+  "network_genesis": "0x93abf42c1d77e8f0a928f31fd29d77bd73cd91eb99f15e41f6d39e087ac3b22c"
+}
+```
+
+**Fields used for digest calculation:** `namespace_id`, `registry_name`, `description`, `schema`, `tag`, `version`, `version_count`, `state`, `genesis`, `created_by`, `meta`, `ttl`
+
+#### Record Proof
+
+```json
+{
+  "type": "DediRecordProof2025",
+  "namespace_did": "did:dedi:ns:acme.global",
+  "registry_identifier": "registry:acme.membership",
+  "record_identifier": "record:acme.membership.member123",
+  "creator_did": "did:web:acme.org#issuer1",
+  "digest": "0xa17cd92be81f7c0da923ff10efa92b9b37cd10aa8e1c4ff2342dd19cbf9023af",
+  "network_genesis": "0x93abf42c1d77e8f0a928f31fd29d77bd73cd91eb99f15e41f6d39e087ac3b22c"
+}
+```
+
+**Fields used for digest calculation:** `namespace_id`, `registry_id`, `registry_name`, `record_name`, `description`, `details`, `version`, `version_count`, `state`, `genesis`, `created_by`, `meta`, `ttl`
+
+***
+
+### How Verification Works
+
+To verify any DeDi entry (namespace, registry, or record):
+
+1. **Lookup** — Query the entry via DeDi API
+2. **Extract fields** — Take the fields required for digest calculation from the response
+3. **Build object** — Convert extracted fields into an object
+4. **Serialize** — Apply canonical serialization
+5. **Stringify** — Convert to string using `JSON.stringify()`
+6. **Hash** — Calculate digest using BLAKE2 H256
+7. **Compare** — Verify that your calculated digest matches the `digest` in the proof
+
+#### On-Chain Verification
+
+For additional assurance, verify directly against the CORD blockchain:
+
+1. Go to [apps.cord.network](https://apps.cord.network/) (CORD explorer)
+2. Perform a state query using the entry's identifier (`namespace_id`, `registry_id`, or `record_id`)
+3. The returned digest should match what you calculated
+
+This confirms the proof was genuinely anchored on-chain and hasn't been tampered with.
 
 ***
 
 ### DID Documents
 
-For every `profile_id`, a **DID (Decentralized Identifier) document** is automatically generated. The URI follows the pattern:
+For every `profile_id`, a DID document is automatically generated:
 
 ```
 did:web:did.cord.network:{id}
 ```
 
-You can access the DID document for any `namespace_id` or `created_by` value at:
-
-```
-https://did.cord.network/{id}/did.json
-```
-
-***
-
-### How Proof Anchoring Works
-
-All registry and record proofs are submitted through a profile and signed using the corresponding keypair. From the blockchain's perspective, anchoring a proof is a **transaction**.
-
-#### The Anchoring Process
-
-1. **Data Serialization**: The entry data (registry or record) is structured into a blob
-2. **Hashing**: The blob is serialized via `JSON.stringify()` and hashed using the **BLAKE2 H256** algorithm
-3. **Signing**: The digest (hash) and blob form an unsigned transaction, which is then signed using the private key associated with the `profile_id`
-4. **Submission**: The signed transaction is submitted to the chain for validation
-5. **Inclusion**: If the signature and nonce are valid, the transaction is included in a block as a valid on-chain proof
-
-#### Registry Proof Structure
-
-When a registry is created or updated, the following data is used to generate the proof:
-
-```javascript
-{
-  namespace_id,      // Parent namespace identifier
-  registry_name,     // Human-readable name
-  description,       // Registry description
-  schema,            // Data schema definition
-  tag,               // Classification tag
-  version,           // Current version number
-  version_count,     // Total version count
-  state,             // Current state (active, revoked, etc.)
-  genesis,           // Original creation reference
-  created_by,        // Profile ID of creator
-  meta,              // Additional metadata
-  ttl                // Time-to-live configuration
-}
-```
-
-#### Record Proof Structure
-
-Record proofs follow a similar pattern, with the addition of the `details` field containing the actual record data:
-
-```javascript
-{
-  namespace_id,
-  registry_name,
-  description,
-  details,           // The actual record content
-  tag,
-  version,
-  version_count,
-  state,
-  genesis,
-  created_by,
-  meta,
-  ttl
-}
-```
-
-***
-
-### Chain Events and Identifiers
-
-Once a transaction is successfully included in a block, an event is logged on the CORD chain.
-
-#### Identifier Generation
-
-* `registry_id` and `record_id` are **not** part of the original blob
-* The chain **generates these identifiers automatically** upon successful anchoring
-* This ensures identifier uniqueness and prevents collisions
-
-#### Queryable Data
-
-Using an identifier, you can query:
-
-* Latest state of the entry
-* All associated signatures
-* Complete historical state changes
-
-#### Version Tracking
-
-Any update to a registry or record results in:
-
-* A new blob and new digest
-* The **same identifier** (preserving continuity)
-* A new entry in the version history
-
-***
-
-### Verification
-
-Anyone can verify a DeDi entry by:
-
-1. **Retrieving the proof** from the CORD blockchain using the entry's identifier
-2. **Reconstructing the digest** by hashing the entry data using BLAKE2 H256
-3. **Comparing** the reconstructed digest with the on-chain digest
-4. **Verifying the signature** against the public key associated with the `profile_id`
-
-#### Blockchain Explorer
-
-All proofs and transactions are publicly viewable at:
-
-🔗 [apps.cord.network](https://apps.cord.network/)
-
-Here you can inspect:
-
-* Timestamps of all transactions
-* Cryptographic signatures
-* Transaction details and parameters
-* Associated identifiers (`namespace_id`, `registry_id`, `record_id`)
+Access any DID document at: `https://did.cord.network/{id}/did.json`
 
 ***
 
 ### Summary
 
-| Concept                 | Description                                                                         |
-| ----------------------- | ----------------------------------------------------------------------------------- |
-| **CORD**                | Distributed ledger anchoring all DeDi proofs                                        |
-| **Profile**             | Unique on-chain identity created using sr25519 keys                                 |
-| **DID Document**        | JSON document representing an on-chain identity                                     |
-| **Proof Anchoring**     | Signed transactions storing content digests on-chain                                |
-| **BLAKE2 H256**         | Cryptographic hash algorithm used for digest generation                             |
-| **sr25519**             | Signature scheme for keypair generation and signing                                 |
-| **Blockchain Explorer** | [apps.cord.network](https://apps.cord.network/)—view all proof and transaction data |
+| Level         | Proof Type               | Key Identifiers                                                            |
+| ------------- | ------------------------ | -------------------------------------------------------------------------- |
+| **Namespace** | `DediNamespaceProof2025` | `namespace_did`, `creator_did`                                             |
+| **Registry**  | `DeDiRegistryProof2025`  | `namespace_did`, `registry_identifier`, `creator_did`                      |
+| **Record**    | `DediRecordProof2025`    | `namespace_did`, `registry_identifier`, `record_identifier`, `creator_did` |
+
+All proofs include a `digest` (BLAKE2 H256 hash of entry data) and `network_genesis` (CORD chain identifier), and can be independently verified both through the DeDi API and directly on-chain.
