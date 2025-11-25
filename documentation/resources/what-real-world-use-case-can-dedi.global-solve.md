@@ -1,2 +1,3 @@
-# What real world use case can DeDi.global solve?
+# What real world use cases can DeDi.global solve?
 
+Content to be added soon
