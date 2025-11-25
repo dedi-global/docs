@@ -33,4 +33,6 @@ layout:
 
 ***
 
+{% hint style="success" %}
 _Governed by Networks for Humanity Foundation · Built on DDP under Linux Foundation Decentralized Trust_
+{% endhint %}
