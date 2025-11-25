@@ -13,6 +13,7 @@
   * [User Guide - DeDi.Global namespace & directory creation](resources/user-guides/namespace-and-registry-creation.md)
 * [What real world use cases can DeDi.global solve?](resources/what-real-world-use-case-can-dedi.global-solve.md)
 * [How are DeDi.global entries cryptographically secured?](resources/how-are-dedi.global-entries-cryptographically-secured.md)
+* [DeDi in Verifiable Credential Workflows](resources/dedi-in-verifiable-credential-workflows.md)
 
 ## DeDi.global - Developers
 
